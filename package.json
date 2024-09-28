@@ -1,6 +1,6 @@
 {
   "name": "@dani.dev.pm/cordova-plugin-mlkit-doc-scanner",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A Cordova plugin for ML Kit Document Scanner",
   "cordova": {
     "id": "cordova-plugin-mlkit-doc-scanner",
@@ -24,7 +24,8 @@
     "url": "https://github.com/danidevpm/cordova-plugin-mlkit-doc-scanner/issues"
   },
   "homepage": "https://github.com/danidevpm/cordova-plugin-mlkit-doc-scanner#readme",
-  "main": "plugin.xml",
+  "main": "index.js",
+  "types": "types.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   }

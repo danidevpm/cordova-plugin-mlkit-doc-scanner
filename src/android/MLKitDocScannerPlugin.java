@@ -63,22 +63,58 @@ public class MLKitDocScannerPlugin extends CordovaPlugin {
 
         if (action.equals("scanDocument")) {
             System.out.println("MLKitDocScannerPlugin: scanDocument called");
-            startDocumentScanner();
-            //initialize();
-            //checkPermissionsAndScan();
+            startDocumentScanner(args);
             return true;
         }
 
         return false;
     }
 
-    private void startDocumentScanner() {
+    private void startDocumentScanner(JSONArray args) {
         System.out.println("MLKitDocScannerPlugin: startDocumentScanner called");
-        GmsDocumentScannerOptions options = new GmsDocumentScannerOptions.Builder()
-            .setGalleryImportAllowed(true)
-            .setPageLimit(5)
-            .setResultFormats(GmsDocumentScannerOptions.RESULT_FORMAT_JPEG, GmsDocumentScannerOptions.RESULT_FORMAT_PDF)
-            .build();
+
+        // Default values
+        int pageLimit = 0;
+        boolean includeJpeg = true;
+        boolean includePdf = true;
+
+        // Parse arguments if provided
+        if (args.length() > 0) {
+            try {
+                JSONObject options = args.getJSONObject(0);
+                if (options.has("pageLimit")) {
+                    pageLimit = options.getInt("pageLimit");
+                }
+                if (options.has("includeJpeg")) {
+                    includeJpeg = options.getBoolean("includeJpeg");
+                }
+                if (options.has("includePdf")) {
+                    includePdf = options.getBoolean("includePdf");
+                }
+            } catch (JSONException e) {
+                System.err.println("MLKitDocScannerPlugin: Error parsing options: " + e.getMessage());
+                callbackContext.error("Error parsing options: " + e.getMessage());
+                return;
+            }
+        }
+
+        GmsDocumentScannerOptions.Builder optionsBuilder = new GmsDocumentScannerOptions.Builder()
+            .setGalleryImportAllowed(true);
+
+        if (pageLimit > 0) {
+            optionsBuilder.setPageLimit(pageLimit);
+        }
+
+        // Set result formats based on input
+        if (includeJpeg && includePdf) {
+            optionsBuilder.setResultFormats(GmsDocumentScannerOptions.RESULT_FORMAT_JPEG, GmsDocumentScannerOptions.RESULT_FORMAT_PDF);
+        } else if (includeJpeg) {
+            optionsBuilder.setResultFormats(GmsDocumentScannerOptions.RESULT_FORMAT_JPEG);
+        } else if (includePdf) {
+            optionsBuilder.setResultFormats(GmsDocumentScannerOptions.RESULT_FORMAT_PDF);
+        }
+
+        GmsDocumentScannerOptions options = optionsBuilder.build();
 
         GmsDocumentScanner scanner = GmsDocumentScanning.getClient(options);
         scanner.getStartScanIntent(cordova.getActivity())
@@ -100,8 +136,19 @@ public class MLKitDocScannerPlugin extends CordovaPlugin {
         
         JSONObject resultJson = new JSONObject();
         try {
-            resultJson.put("pageCount", result.getPages().size());
-            // Add more result processing as needed
+            List<GmsDocumentScanningResult.Page> pages = result.getPages();
+             // If the format is RESULT_FORMAT_JPEG
+            if (pages != null) {
+                JSONArray pagesJsonArray = new JSONArray();
+                for (GmsDocumentScanningResult.Page page : pages) {
+                    pagesJsonArray.put(page.getImageUri());
+                }
+                resultJson.put("images", pagesJsonArray);
+            }
+             // If the format is RESULT_FORMAT_PDF
+            if (result.getPdf() != null) {
+                resultJson.put("pdf", result.getPdf().getUri());
+            }
             callbackContext.success(resultJson);
         } catch (JSONException e) {
             callbackContext.error("Error processing result: " + e.getMessage());

@@ -9,6 +9,7 @@
     <js-module src="www/ml-kit-doc-scanner.js" name="MLKitDocScanner">
         <clobbers target="cordova.plugins.MLKitDocScanner" />
     </js-module>
+    
 
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">
