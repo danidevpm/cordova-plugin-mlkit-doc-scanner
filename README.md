@@ -57,6 +57,15 @@ Options for scanning documents.
 | `includeJpeg?` | `boolean` | Whether to include JPEG images in the scan result. | `true` |
 | `includePdf?` | `boolean` | Whether to include a PDF in the scan result. | `true` |
 
+#### ScanError
+
+Interface representing an error that occurred during document scanning.
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `code` | `ScanErrorCode` | The error code. |
+| `message` | `string` | The error message. |
+
 #### ScanResult
 
 Result of a document scan.
@@ -65,6 +74,20 @@ Result of a document scan.
 |----------|------|-------------|
 | `images?` | `string[]` | Array of image URIs if JPEG format is included. |
 | `pdf?` | `string` | URI of the PDF if PDF format is included. |
+
+### Error Codes
+
+The following error codes are defined in the `ScanErrorCode` enum:
+
+| Error Code | Description |
+|------------|-------------|
+| `SCANNING_RESULT_NULL` | The scanning result is null. |
+| `NO_PAGES_SCANNED` | No pages were scanned. |
+| `JSON_PROCESSING_ERROR` | An error occurred while processing JSON data. |
+| `SCANNER_START_FAILED` | The scanner failed to start. |
+| `SCANNING_CANCELLED` | The scanning process was cancelled by the user. |
+| `SCANNING_FAILED` | The scanning process failed for an unknown reason. |
+
 
 ## Example
 
@@ -76,7 +99,19 @@ const scanOptions: ScanOptions = {
     includePdf: true
 };
 
-const { images, pdf } = await MLKitDocScanner.scanDocument(scanOptions);
-console.log('Scanned jpeg of each page URIs:', images);
-console.log('Scanned PDF uri:', pdf);
+try {
+    const { images, pdf } = await MLKitDocScanner.scanDocument(scanOptions);
+    console.log('Scanned jpeg of each page URIs:', images);
+    console.log('Scanned PDF uri:', pdf);
+} catch (error) {
+    const scanError = error as ScanError;
+    switch (scanError.code) {
+        case ScanErrorCode.SCANNING_CANCELLED:
+            console.log('User cancelled the scanning process');
+            break;
+        case ScanErrorCode.NO_PAGES_SCANNED:
+            console.log('No pages were scanned');
+            break;
+    }
+}
 ```

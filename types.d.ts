@@ -36,6 +36,56 @@ declare module '@dani.dev.pm/cordova-plugin-mlkit-doc-scanner' {
     }
 
     /**
+     * Enum representing possible error codes during document scanning.
+     */
+    export enum ScanErrorCode {
+        /**
+         * Error code indicating that the scanning result is null.
+         */
+        SCANNING_RESULT_NULL = 'SCANNING_RESULT_NULL',
+        
+        /**
+         * Error code indicating that no pages were scanned.
+         */
+        NO_PAGES_SCANNED = 'NO_PAGES_SCANNED',
+        
+        /**
+         * Error code indicating a JSON processing error.
+         */
+        JSON_PROCESSING_ERROR = 'JSON_PROCESSING_ERROR',
+
+        /**
+         * Error code indicating that the scanner failed to start.
+         */
+        SCANNER_START_FAILED = 'SCANNER_START_FAILED',
+        
+        /**
+         * Error code indicating that the scanning was cancelled.
+         */
+        SCANNING_CANCELLED = 'SCANNING_CANCELLED',
+        
+        /**
+         * Error code indicating that the scanning failed.
+         */
+        SCANNING_FAILED = 'SCANNING_FAILED'
+    }
+
+    /**
+     * Interface representing an error that occurred during document scanning.
+     */
+    export interface ScanError {
+        /**
+         * The error code.
+         */
+        code: ScanErrorCode;
+        
+        /**
+         * The error message.
+         */
+        message: string;
+    }
+
+    /**
      * Interface for the ML Kit Document Scanner.
      */
     export interface MLKitDocScanner {

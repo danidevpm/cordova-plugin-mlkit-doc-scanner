@@ -37,6 +37,14 @@ public class MLKitDocScannerPlugin extends CordovaPlugin {
         Manifest.permission.CAMERA
     };
     
+    // Error constants
+    private static final String ERROR_SCANNING_RESULT_NULL = "SCANNING_RESULT_NULL";
+    private static final String ERROR_NO_PAGES_SCANNED = "NO_PAGES_SCANNED";
+    private static final String ERROR_JSON_PROCESSING = "JSON_PROCESSING_ERROR";
+    private static final String ERROR_SCANNER_START_FAILED = "SCANNER_START_FAILED";
+    private static final String ERROR_SCANNING_CANCELLED = "SCANNING_CANCELLED";
+    private static final String ERROR_SCANNING_FAILED = "SCANNING_FAILED";
+    
     @Override
     protected void pluginInitialize() {
         scannerLauncher = cordova.getActivity().registerForActivityResult(
@@ -47,10 +55,12 @@ public class MLKitDocScannerPlugin extends CordovaPlugin {
                     if (scanningResult != null) {
                         processResult(scanningResult);
                     } else {
-                        callbackContext.error("Scanning result is null");
+                        sendError(ERROR_SCANNING_RESULT_NULL, "Scanning result is null");
                     }
+                } else if (result.getResultCode() == Activity.RESULT_CANCELED) {
+                    sendError(ERROR_SCANNING_CANCELLED, "Scanning was cancelled by the user");
                 } else {
-                    callbackContext.error("Scanning cancelled or failed");
+                    sendError(ERROR_SCANNING_FAILED, "Scanning failed with result code: " + result.getResultCode());
                 }
             }
         );
@@ -77,6 +87,7 @@ public class MLKitDocScannerPlugin extends CordovaPlugin {
         int pageLimit = 0;
         boolean includeJpeg = true;
         boolean includePdf = true;
+        boolean galleryImport = true;
 
         // Parse arguments if provided
         if (args.length() > 0) {
@@ -93,13 +104,14 @@ public class MLKitDocScannerPlugin extends CordovaPlugin {
                 }
             } catch (JSONException e) {
                 System.err.println("MLKitDocScannerPlugin: Error parsing options: " + e.getMessage());
-                callbackContext.error("Error parsing options: " + e.getMessage());
+                sendError(ERROR_JSON_PROCESSING, "Error parsing options: " + e.getMessage());
                 return;
             }
         }
 
-        GmsDocumentScannerOptions.Builder optionsBuilder = new GmsDocumentScannerOptions.Builder()
-            .setGalleryImportAllowed(true);
+        GmsDocumentScannerOptions.Builder optionsBuilder = new GmsDocumentScannerOptions.Builder();
+
+        optionsBuilder.setGalleryImportAllowed(galleryImport);
 
         if (pageLimit > 0) {
             optionsBuilder.setPageLimit(pageLimit);
@@ -124,13 +136,13 @@ public class MLKitDocScannerPlugin extends CordovaPlugin {
         })
         .addOnFailureListener(e -> {
             System.out.println("MLKitDocScannerPlugin: Failed to start scanner: " + e.getMessage());
-            callbackContext.error("Failed to start scanner: " + e.getMessage());
+            sendError(ERROR_SCANNER_START_FAILED, "Failed to start scanner: " + e.getMessage());
         });
     }
 
     private void processResult(GmsDocumentScanningResult result) {
         if (result == null) {
-            callbackContext.error("Scanning result is null");
+            sendError(ERROR_SCANNING_RESULT_NULL, "Scanning result is null");
             return;
         }
         
@@ -144,14 +156,29 @@ public class MLKitDocScannerPlugin extends CordovaPlugin {
                     pagesJsonArray.put(page.getImageUri());
                 }
                 resultJson.put("images", pagesJsonArray);
+            } else if (pages == null || pages.isEmpty()) {
+                sendError(ERROR_NO_PAGES_SCANNED, "No pages were scanned");
+                return;
             }
-             // If the format is RESULT_FORMAT_PDF
+            
+            // If the format is RESULT_FORMAT_PDF
             if (result.getPdf() != null) {
                 resultJson.put("pdf", result.getPdf().getUri());
             }
             callbackContext.success(resultJson);
         } catch (JSONException e) {
-            callbackContext.error("Error processing result: " + e.getMessage());
+            sendError(ERROR_JSON_PROCESSING, "Error processing result: " + e.getMessage());
+        }
+    }
+
+    private void sendError(String errorCode, String errorMessage) {
+        try {
+            JSONObject error = new JSONObject();
+            error.put("code", errorCode);
+            error.put("message", errorMessage);
+            callbackContext.error(error);
+        } catch (JSONException e) {
+            callbackContext.error("Error creating error object: " + e.getMessage());
         }
     }
 }
