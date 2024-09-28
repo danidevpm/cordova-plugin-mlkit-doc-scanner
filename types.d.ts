@@ -38,7 +38,7 @@ declare module '@dani.dev.pm/cordova-plugin-mlkit-doc-scanner' {
     /**
      * Enum representing possible error codes during document scanning.
      */
-    export enum ScanErrorCode {
+    export const enum ScanErrorCode {
         /**
          * Error code indicating that the scanning result is null.
          */

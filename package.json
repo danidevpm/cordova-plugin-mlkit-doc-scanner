@@ -1,18 +1,19 @@
 {
   "name": "@dani.dev.pm/cordova-plugin-mlkit-doc-scanner",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "A Cordova plugin for ML Kit Document Scanner",
   "cordova": {
-    "id": "cordova-plugin-mlkit-doc-scanner",
+    "id": "@dani.dev.pm/cordova-plugin-mlkit-doc-scanner",
     "platforms": [
       "android"
     ]
   },
   "keywords": [
+    "document-scanner",
+    "mlkit",
     "ecosystem:cordova",
     "cordova-android",
-    "mlkit",
-    "document-scanner"
+    "ionic"
   ],
   "author": "Daniel Macedo",
   "license": "MIT",
